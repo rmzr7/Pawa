@@ -27,11 +27,31 @@ class Player(BasePlayer):
     # Checks if we can use a given path
     def path_is_valid(self, state, path):
         graph = state.get_graph()
-        print(graph)
         for i in range(0, len(path) - 1):
             if graph.edge[path[i]][path[i + 1]]['in_use']:
                 return False
         return True
+
+    def get_actual_gain(self, state, order, path):
+        total = order.get_money() - \
+            (state.get_time() - order.get_time_created()) * \
+            DECAY_FACTOR
+
+        amortized = total - (len(path) -1) * DECAY_FACTOR
+        return max(amortized, 0)
+
+    def find_best_max_decay(self, graph):
+        pass
+
+    def determine_fufill_order(self, path):
+        pass
+
+    def keywithmaxval(d):
+        """ a) create a list of the dict's keys and values; 
+            b) return the key with the max value"""  
+        v=list(d.values())
+        k=list(d.keys())
+        return k[v.index(max(v))]
 
     def step(self, state):
         """
@@ -49,10 +69,10 @@ class Player(BasePlayer):
 
         # We have implemented a naive bot for you that builds a single station
         # and tries to find the shortest path from it to first pending order.
-        # We recommend making it a bit smarter ;-)
+        # We recommend making it a bit smarter wink emoticon
 
         graph = state.get_graph()
-        station = graph.nodes()[0]
+        station = graph.nodes()[35]
 
         commands = []
         if not self.has_built_station:
@@ -60,10 +80,13 @@ class Player(BasePlayer):
             self.has_built_station = True
 
         pending_orders = state.get_pending_orders()
+        selections = {} # {int:order}
         if len(pending_orders) != 0:
+            for order in pending_orders:
+                selections[get_actual_gain(state, order, path)] = order
             order = random.choice(pending_orders)
             path = nx.shortest_path(graph, station, order.get_node())
-            if self.path_is_valid(state, path):
+            if self.path_is_valid(state, path) and self.get_actual_gain(path) <= 72:
                 commands.append(self.send_command(order, path))
 
         return commands

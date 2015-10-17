@@ -1,19 +1,21 @@
 import networkx as nx
 import random
 import math
+import random
 from settings import *
 
 def node_index(row, col, row_size):
     return row * row_size + col
 
-GRAPH_SEED = 'I am a graph seed!'
+GRAPH_SEED = str(random.randint(0, 2000))
+print("SEED " + GRAPH_SEED)
 
 # A very visualizable grid graph (GRAPH_SIZE should be a square)
 def grid_graph():
     random.seed(GRAPH_SEED)
     width = int(round(math.sqrt(GRAPH_SIZE)))
     if width**2 != GRAPH_SIZE:
-        print width, GRAPH_SIZE
+        #  width, GRAPH_SIZE
         raise ValueError("GRAPH_SIZE must be a square for grid_graph")
 
     # Generate the base grid (no diagonals added yet)
