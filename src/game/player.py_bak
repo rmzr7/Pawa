@@ -158,10 +158,7 @@ class Player(BasePlayer):
                     path = nx.shortest_path(new_graph, self.closestStation(new_graph,order.get_node())[0],
                      order.get_node())
 
-                    orderCash = self.get_actual_gain(state, order, path)
-                    if (orderCash < 6):
-                        continue
-                    selections[orderCash] = order
+                    selections[self.get_actual_gain(state, order, path)] = order
                 opt_order = selections[self.key_with_max_val(selections)]
 
                 #order = random.choice(pending_orders)
