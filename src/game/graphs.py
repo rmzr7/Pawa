@@ -8,7 +8,7 @@ def node_index(row, col, row_size):
     return row * row_size + col
 
 # GRAPH_SEED = str(random.randint(0, 2000))
-GRAPH_SEED = "I am a graph seed!"
+GRAPH_SEED = "node.js"
 print("SEED " + GRAPH_SEED)
 
 # A very visualizable grid graph (GRAPH_SIZE should be a square)
