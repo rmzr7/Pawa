@@ -13,6 +13,12 @@ class Player(BasePlayer):
 
     # You can set up static state here
     has_built_station = False
+    stations=[]
+    builtStations = 0
+    moneySpent = 0
+
+    distanceWeight = 0.12
+    stationCount = 2
 
     def __init__(self, state):
         """
@@ -25,6 +31,50 @@ class Player(BasePlayer):
         """
 
         return
+
+    def nextBestNode(self, state): #Finds the next best spot for a station
+        graph = state.get_graph()
+        nodeScores = []
+        centrality = nx.eigenvector_centrality(graph)
+        for i in centrality:
+            nodeScores.append(centrality[i])
+
+        bestNode = 0
+        bestScore = nodeScores[0]
+        for i in range(len(nodeScores)):
+            if (nodeScores[i] > bestScore and (i not in self.stations)):
+                bestNode = i
+                bestScore = nodeScores[i]
+        print("bestNode=",(bestScore,bestNode))
+
+        #Factor in distance from each station
+        for i in range(len(nodeScores)):
+            if (i not in self.stations):
+                distanceScore = 1.0 / self.closestStation(graph, i)[1]
+                print("distanceScore=",distanceScore)
+                nodeScores[i] -= distanceScore * self.distanceWeight
+
+        #Get the node with the best score
+        bestNode = 0
+        bestScore = nodeScores[0]
+        for i in range(len(nodeScores)):
+            if (nodeScores[i] > bestScore and (i not in self.stations)):
+                bestNode = i
+                bestScore = nodeScores[i]
+        print("bestNode=",(bestScore,bestNode))
+        return bestNode
+
+    def closestStation(self, graph, node): #Returns the closest station and the distance from it
+        if (len(self.stations) == 0): return 0,999999
+        bestDistance = 99999999
+        bestStation = self.stations[0]
+        for station in self.stations:
+            dist = nx.astar_path_length(graph,station,node)
+            if (dist == 0): return node, 1
+            if (dist < bestDistance):
+                bestDistance = dist
+                bestStation = station
+        return bestStation, bestDistance
 
     # Checks if we can use a given path
     def path_is_valid(self, state, path):
@@ -82,20 +132,25 @@ class Player(BasePlayer):
         # and tries to find the shortest path from it to first pending order.
         # We recommend making it a bit smarter ;-)
 
+        buildCost = INIT_BUILD_COST * BUILD_FACTOR ** len(self.stations)
+        if (len(self.stations) == 0 or (len(self.stations) < self.stationCount and state.get_money() > buildCost)):
+            self.stations.append(self.nextBestNode(state))
+            self.moneySpent += buildCost
+            #self.distanceWeight /= 1.5
         graph = state.get_graph()
-        station = graph.nodes()[35]
+        station = graph.nodes()[self.stations[len(self.stations)-1]]
 
         commands = []
-        if not self.has_built_station:
+        if self.builtStations < len(self.stations):
             commands.append(self.build_command(station))
-            self.has_built_station = True
+            self.builtStations += 1
 
         pending_orders = state.get_pending_orders()
         selections = {} # {int:order}
         if len(pending_orders) != 0:
             try:
                 for order in pending_orders:
-                    path = nx.shortest_path(self.get_graph_without_orders(state, graph), station, order.get_node())
+                    path = nx.shortest_path(self.get_graph_without_orders(state, graph), self.closestStation(graph,order.get_node())[0], order.get_node())
                     selections[self.get_actual_gain(state, order, path)] = order
                 opt_order = selections[self.key_with_max_val(selections)]
 
