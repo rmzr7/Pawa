@@ -16,7 +16,7 @@ class Player(BasePlayer):
     moneySpent = 0
 
     distanceWeight = 0.1
-    stationCount = 5
+    stationCount = 4
 
     def __init__(self, state):
         """
