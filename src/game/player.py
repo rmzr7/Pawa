@@ -17,8 +17,12 @@ class Player(BasePlayer):
     builtStations = 0
     moneySpent = 0
 
-    distanceWeight = 0.3
-    stationCount = 5
+    distanceWeight = 0.2
+    stationCount = int(GRAPH_SIZE / 25)
+    if stationCount < 2:
+        stationCount = 2
+    elif stationCount > 4:
+        stationCount = 5
 
     def __init__(self, state):
         """
@@ -159,7 +163,7 @@ class Player(BasePlayer):
 
                 #order = random.choice(pending_orders)
                 path = nx.shortest_path(self.get_graph_without_orders(state, graph),
-                 self.closestStation(new_graph,order.get_node())[0], opt_order.get_node())
+                 self.closestStation(graph,order.get_node())[0], opt_order.get_node())
                 if self.path_is_valid(state, path):
                     commands.append(self.send_command(opt_order, path))
             except:
