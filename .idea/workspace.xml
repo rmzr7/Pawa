@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="3a9a3598-9dcb-43b3-8814-86b69137f589" name="Default" comment="modfied player.py&#10;">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/game/player.py" afterPath="$PROJECT_DIR$/src/game/player.py" />
+    <list default="true" id="3a9a3598-9dcb-43b3-8814-86b69137f589" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="Pawa.iws" />
@@ -447,7 +446,13 @@
       <option name="project" value="LOCAL" />
       <updated>1445109831063</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="modfied player.py&#10;">
+      <created>1445110443986</created>
+      <option name="number" value="00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1445110443986</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="ToolWindowManager">
