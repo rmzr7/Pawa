@@ -17,8 +17,8 @@ class Player(BasePlayer):
     builtStations = 0
     moneySpent = 0
 
-    distanceWeight = 0.12
-    stationCount = 2
+    distanceWeight = 0.3
+    stationCount = 5
 
     def __init__(self, state):
         """
@@ -35,7 +35,7 @@ class Player(BasePlayer):
     def nextBestNode(self, state): #Finds the next best spot for a station
         graph = state.get_graph()
         nodeScores = []
-        centrality = nx.eigenvector_centrality(graph)
+        centrality = nx.degree_centrality(graph)
         for i in centrality:
             nodeScores.append(centrality[i])
 
@@ -45,13 +45,13 @@ class Player(BasePlayer):
             if (nodeScores[i] > bestScore and (i not in self.stations)):
                 bestNode = i
                 bestScore = nodeScores[i]
-        print("bestNode=",(bestScore,bestNode))
+        #print("bestNode=",(bestScore,bestNode))
 
         #Factor in distance from each station
         for i in range(len(nodeScores)):
             if (i not in self.stations):
                 distanceScore = 1.0 / self.closestStation(graph, i)[1]
-                print("distanceScore=",distanceScore)
+                #print("distanceScore=",distanceScore)
                 nodeScores[i] -= distanceScore * self.distanceWeight
 
         #Get the node with the best score
@@ -61,7 +61,7 @@ class Player(BasePlayer):
             if (nodeScores[i] > bestScore and (i not in self.stations)):
                 bestNode = i
                 bestScore = nodeScores[i]
-        print("bestNode=",(bestScore,bestNode))
+        #print("bestNode=",(bestScore,bestNode))
         return bestNode
 
     def closestStation(self, graph, node): #Returns the closest station and the distance from it
@@ -150,12 +150,16 @@ class Player(BasePlayer):
         if len(pending_orders) != 0:
             try:
                 for order in pending_orders:
-                    path = nx.shortest_path(self.get_graph_without_orders(state, graph), self.closestStation(graph,order.get_node())[0], order.get_node())
+                    new_graph = self.get_graph_without_orders(state, graph)
+                    path = nx.shortest_path(new_graph, self.closestStation(new_graph,order.get_node())[0],
+                     order.get_node())
+
                     selections[self.get_actual_gain(state, order, path)] = order
                 opt_order = selections[self.key_with_max_val(selections)]
 
                 #order = random.choice(pending_orders)
-                path = nx.shortest_path(self.get_graph_without_orders(state, graph), station, opt_order.get_node())
+                path = nx.shortest_path(self.get_graph_without_orders(state, graph),
+                 self.closestStation(new_graph,order.get_node())[0], opt_order.get_node())
                 if self.path_is_valid(state, path):
                     commands.append(self.send_command(opt_order, path))
             except:
