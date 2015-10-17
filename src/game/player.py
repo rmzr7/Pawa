@@ -46,7 +46,7 @@ class Player(BasePlayer):
     def determine_fufill_order(self, path):
         pass
 
-    def key_with_max_val(d):
+    def key_with_max_val(self, d):
         """ a) create a list of the dict's keys and values;
             b) return the key with the max value"""
         v=list(d.values())
@@ -84,8 +84,8 @@ class Player(BasePlayer):
         if len(pending_orders) != 0:
             for order in pending_orders:
                 path = nx.shortest_path(graph, station, order.get_node())
-                selections[get_actual_gain(state, order, path)] = order
-            opt_order = selections[key_with_max_val(selections)]
+                selections[self.get_actual_gain(state, order, path)] = order
+            opt_order = selections[self.key_with_max_val(selections)]
 
             #order = random.choice(pending_orders)
             path = nx.shortest_path(graph, station, opt_order.get_node())
