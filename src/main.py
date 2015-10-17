@@ -16,14 +16,12 @@ def main():
     if command == 'web':
         run_server(make_game())
     elif command == 'shell':
-        i = 0
-        while i < 10:
-            game = make_game()
-            while not game.is_over():
-                game.step()
+        game = make_game()
+        while not game.is_over():
+            game.step()
 
-            print str(i) + ' Final money: $%d' % game.state.get_money()
-            i += 1
+        print 'Final money: $%d' % game.state.get_money()
+
     else: print_usage()
 
 if __name__ == "__main__":
