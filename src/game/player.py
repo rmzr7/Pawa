@@ -2,32 +2,65 @@ import networkx as nx
 import random
 from base_player import BasePlayer
 from settings import *
-# from copy import deepcopy
 
 class Player(BasePlayer):
     """
-    You will implement this class for the competition. DO NOT change the class
-    name or the base class.
-    """
-
-
+        You will implement this class for the competition. DO NOT change the class
+        name or the base class.
+        """
+    
     # You can set up static state here
     has_built_station = False
-
+    stations=[]
+    builtStations = 0
+    moneySpent = 0
+    
     def __init__(self, state):
-        self.virtgraph = state.get_graph().copy()
-        self.pastActiveOrders = state.get_active_orders()
         """
-        Initializes your Player. You can set up persistent state, do analysis
-        on the input graph, engage in whatever pre-computation you need. This
-        function must take less than Settings.INIT_TIMEOUT seconds.
-        --- Parameters ---
-        state : State
+            Initializes your Player. You can set up persistent state, do analysis
+            on the input graph, engage in whatever pre-computation you need. This
+            function must take less than Settings.INIT_TIMEOUT seconds.
+            --- Parameters ---
+            state : State
             The initial state of the game. See state.py for more information.
-        """
-
+            """
         return
-
+    
+    def nextBestNode(self, state):
+        graph = state.get_graph()
+        nodeScores = []
+        centrality = nx.degree_centrality(graph)
+        for i in centrality:
+            nodeScores.append(centrality[i])
+        
+        #Factor in distance from each station
+        for i in range(len(nodeScores)):
+            if (i not in self.stations):
+                distanceScore = 1 / self.closestStation(graph, i)[1]
+                nodeScores[i] -= distanceScore*10
+    
+        #Get the node with the best score
+        bestNode = 0
+        bestScore = nodeScores[0]
+        for i in range(len(nodeScores)):
+            if (nodeScores[i] > bestScore and (i not in self.stations)):
+                bestNode = i
+                bestScore = nodeScores[i]
+print("bestScore=",bestScore)
+    return bestNode
+    
+    def closestStation(self, graph, node):
+        if (len(self.stations) == 0): return 0,999999
+        bestDistance = 99999999
+        bestStation = self.stations[0]
+        for station in self.stations:
+            dist = nx.astar_path_length(graph,station,node)
+            if (dist == 0): return node, 1
+            if (dist < bestDistance):
+                bestDistance = dist
+                bestStation = station
+        return bestStation, bestDistance
+    
     # Checks if we can use a given path
     def path_is_valid(self, state, path):
         graph = state.get_graph()
@@ -35,88 +68,48 @@ class Player(BasePlayer):
             if graph.edge[path[i]][path[i + 1]]['in_use']:
                 return False
         return True
-
-    def get_actual_gain(self, state, order, path):
-        total = order.get_money() - \
-            (state.get_time() - order.get_time_created()) * \
-            DECAY_FACTOR
-
-        amortized = total - (len(path) -1) * DECAY_FACTOR
-        return max(amortized, 0)
-
-    def find_best_max_decay(self, graph):
-        pass
-
-    def determine_fufill_order(self, path):
-        pass
-
-    def removePath(self, path):
-        for i in range(len(path)):
-            if i + 1 < len(path):
-                self.virtgraph.remove_edge(path[i], path[i + 1])
-
-
-
-
-    def key_with_max_val(self, d):
-        """ a) create a list of the dict's keys and values;
-            b) return the key with the max value"""
-        v=list(d.values())
-        k=list(d.keys())
-        return k[v.index(max(v))]
-
+    
     def step(self, state):
         """
-        Determine actions based on the current state of the city. Called every
-        time step. This function must take less than Settings.STEP_TIMEOUT
-        seconds.
-        --- Parameters ---
-        state : State
+            Determine actions based on the current state of the city. Called every
+            time step. This function must take less than Settings.STEP_TIMEOUT
+            seconds.
+            --- Parameters ---
+            state : State
             The state of the game. See state.py for more information.
-        --- Returns ---
-        commands : dict list
+            --- Returns ---
+            commands : dict list
             Each command should be generated via self.send_command or
             self.build_command. The commands are evaluated in order.
-        """
-
+            """
+        
         # We have implemented a naive bot for you that builds a single station
         # and tries to find the shortest path from it to first pending order.
         # We recommend making it a bit smarter ;-)
-
+        
+        print("stations=",self.stations)
+        print("money=", state.get_money())
+        buildCost = INIT_BUILD_COST * BUILD_FACTOR ** len(self.stations)
+        if (len(self.stations) == 0 or (len(self.stations) < 4 and state.get_money() > buildCost)):
+            self.stations.append(self.nextBestNode(state))
+            moneySpent += buildCost
         graph = state.get_graph()
-        station = graph.nodes()[35]
-
+        station = graph.nodes()[self.stations[len(self.stations)-1]]
+        
         commands = []
-        if not self.has_built_station:
+        print("built", self.builtStations)
+        if self.builtStations < len(self.stations):
             commands.append(self.build_command(station))
-            self.has_built_station = True
+            self.builtStations += 1
 
+pending_orders = state.get_pending_orders()
+    if len(pending_orders) != 0:
+        order = random.choice(pending_orders)
+            path = nx.shortest_path(graph, self.closestStation(graph,order.get_node())[0], order.get_node())
+            if self.path_is_valid(state, path):
+                commands.append(self.send_command(order, path)) #Go to this order with this path
 
-        for pastActiveOrder in self.pastActiveOrders:
-            if pastActiveOrder not in state.get_active_orders():
-                self.addPath(pastActiveOrder[1])
-
-
-        pending_orders = state.get_pending_orders()
-        selections = {} # {int:order}
-        if len(pending_orders) != 0:
-            for order in pending_orders:
-                path = nx.shortest_path(self.virtgraph, station, order.get_node())
-                selections[self.get_actual_gain(state, order, path)] = order
-            opt_order = selections[self.key_with_max_val(selections)]
-
-            #order = random.choice(pending_orders)
-            path = nx.shortest_path(self.virtgraph, station, opt_order.get_node())
-            if self.path_is_valid(state, path) and self.get_actual_gain(state, order, path) <= 90:
-                commands.append(self.send_command(opt_order, path))
-                self.removePath(path)
-        self.pastActiveOrders = state.get_active_orders()
+    if (state.get_time() == 999):
+        print("totalMoney=",state.get_money() + self.moneySpent)
+        
         return commands
-
-    def addPath(self, path):
-        for i in range(len(path)):
-            if i + 1 < len(path):
-                self.virtgraph.add_edge(path[i], path[i + 1])
-
-
-
