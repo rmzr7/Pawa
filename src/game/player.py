@@ -46,9 +46,9 @@ class Player(BasePlayer):
     def determine_fufill_order(self, path):
         pass
 
-    def keywithmaxval(d):
-        """ a) create a list of the dict's keys and values; 
-            b) return the key with the max value"""  
+    def key_with_max_val(d):
+        """ a) create a list of the dict's keys and values;
+            b) return the key with the max value"""
         v=list(d.values())
         k=list(d.keys())
         return k[v.index(max(v))]
@@ -69,7 +69,7 @@ class Player(BasePlayer):
 
         # We have implemented a naive bot for you that builds a single station
         # and tries to find the shortest path from it to first pending order.
-        # We recommend making it a bit smarter wink emoticon
+        # We recommend making it a bit smarter ;-)
 
         graph = state.get_graph()
         station = graph.nodes()[35]
@@ -84,7 +84,9 @@ class Player(BasePlayer):
         if len(pending_orders) != 0:
             for order in pending_orders:
                 selections[get_actual_gain(state, order, path)] = order
-            order = random.choice(pending_orders)
+            order = selections[key_with_max_val(selections)]
+
+            #order = random.choice(pending_orders)
             path = nx.shortest_path(graph, station, order.get_node())
             if self.path_is_valid(state, path) and self.get_actual_gain(path) <= 72:
                 commands.append(self.send_command(order, path))
