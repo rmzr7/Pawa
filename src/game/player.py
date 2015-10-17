@@ -89,7 +89,7 @@ class Player(BasePlayer):
 
             #order = random.choice(pending_orders)
             path = nx.shortest_path(graph, station, opt_order.get_node())
-            if self.path_is_valid(state, path) and self.get_actual_gain(path) <= 72:
+            if self.path_is_valid(state, path) and self.get_actual_gain(state, order, path) <= 100000000:
                 commands.append(self.send_command(opt_order, path))
 
         return commands
