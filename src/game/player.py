@@ -27,6 +27,7 @@ class Player(BasePlayer):
     # Checks if we can use a given path
     def path_is_valid(self, state, path):
         graph = state.get_graph()
+        print(graph)
         for i in range(0, len(path) - 1):
             if graph.edge[path[i]][path[i + 1]]['in_use']:
                 return False
