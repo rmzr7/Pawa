@@ -15,6 +15,9 @@ class Player(BasePlayer):
     builtStations = 0
     moneySpent = 0
 
+    distanceWeight = 0.1
+    stationCount = 5
+
     def __init__(self, state):
         """
         Initializes your Player. You can set up persistent state, do analysis
@@ -33,11 +36,20 @@ class Player(BasePlayer):
         for i in centrality:
             nodeScores.append(centrality[i])
 
+        bestNode = 0
+        bestScore = nodeScores[0]
+        for i in range(len(nodeScores)):
+            if (nodeScores[i] > bestScore and (i not in self.stations)):
+                bestNode = i
+                bestScore = nodeScores[i]
+        print("bestNode=",(bestScore,bestNode))
+
         #Factor in distance from each station
         for i in range(len(nodeScores)):
             if (i not in self.stations):
-                distanceScore = 1 / self.closestStation(graph, i)[1]
-                nodeScores[i] -= distanceScore*10
+                distanceScore = 1.0 / self.closestStation(graph, i)[1]
+                print("distanceScore=",distanceScore)
+                nodeScores[i] -= distanceScore * self.distanceWeight
 
         #Get the node with the best score
         bestNode = 0
@@ -46,7 +58,7 @@ class Player(BasePlayer):
             if (nodeScores[i] > bestScore and (i not in self.stations)):
                 bestNode = i
                 bestScore = nodeScores[i]
-        print("bestScore=",bestScore)
+        print("bestNode=",(bestScore,bestNode))
         return bestNode
 
     def closestStation(self, graph, node):
@@ -90,9 +102,10 @@ class Player(BasePlayer):
         print("stations=",self.stations)
         print("money=", state.get_money())
         buildCost = INIT_BUILD_COST * BUILD_FACTOR ** len(self.stations)
-        if (len(self.stations) == 0 or (len(self.stations) < 4 and state.get_money() > buildCost)):
+        if (len(self.stations) == 0 or (len(self.stations) < self.stationCount and state.get_money() > buildCost)):
             self.stations.append(self.nextBestNode(state))
-            moneySpent += buildCost
+            self.moneySpent += buildCost
+            #self.distanceWeight /= 1.5
         graph = state.get_graph()
         station = graph.nodes()[self.stations[len(self.stations)-1]]
 
