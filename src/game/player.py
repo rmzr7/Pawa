@@ -93,14 +93,17 @@ class Player(BasePlayer):
         pending_orders = state.get_pending_orders()
         selections = {} # {int:order}
         if len(pending_orders) != 0:
-            for order in pending_orders:
-                path = nx.shortest_path(self.get_graph_without_orders(state, graph), station, order.get_node())
-                selections[self.get_actual_gain(state, order, path)] = order
-            opt_order = selections[self.key_with_max_val(selections)]
+            try:
+                for order in pending_orders:
+                    path = nx.shortest_path(self.get_graph_without_orders(state, graph), station, order.get_node())
+                    selections[self.get_actual_gain(state, order, path)] = order
+                opt_order = selections[self.key_with_max_val(selections)]
 
-            #order = random.choice(pending_orders)
-            path = nx.shortest_path(self.get_graph_without_orders(state, graph), station, opt_order.get_node())
-            if self.path_is_valid(state, path):
-                commands.append(self.send_command(opt_order, path))
+                #order = random.choice(pending_orders)
+                path = nx.shortest_path(self.get_graph_without_orders(state, graph), station, opt_order.get_node())
+                if self.path_is_valid(state, path):
+                    commands.append(self.send_command(opt_order, path))
+            except:
+                pass
 
         return commands
